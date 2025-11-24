@@ -1,6 +1,6 @@
-# Mini Story SDK
+# Web Story Viewer SDK
 
-Mini Story SDK is a lightweight Web Component (Custom Element) that brings **Instagram-like Stories** to any website using **pure JavaScript + Web Components** without any framework.
+Web Story Viewer SDK is a lightweight Web Component (Custom Element) that brings **Instagram-like Stories** to any website using **pure JavaScript + Web Components** without any framework.
 
 It supports:
 
