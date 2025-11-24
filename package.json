@@ -1,0 +1,53 @@
+{
+  "name": "mini-story-sdk",
+  "version": "1.0.0",
+  "description": "Mini Story Web Component SDK (TypeScript) - ESM + CJS + Types",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "web-component",
+    "stories",
+    "sdk",
+    "mini-story",
+    "viewer",
+    "story-sdk"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mini-story-sdk"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "Omar Issa",
+  "homepage": "https://github.com/yourusername/mini-story-sdk#readme",
+  "scripts": {
+    "build": "tsc && rollup -c",
+    "clean": "rimraf dist",
+    "dev": "tsc -w",
+    "start:demo": "npx http-server . -p 8080",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "rollup": "^2.79.1",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "rollup-plugin-dts": "^4.2.3",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@testing-library/dom": "^8.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  }
+}

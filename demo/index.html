@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mini Story SDK — Instagram-like Demo</title>
+    <style>
+      :root {
+        --bg: #0f0f10;
+        --card-bg: #111217;
+        --muted: #bfc3c8;
+        --accent: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #0b0c0d, #0b0b0b);
+        font-family: system-ui, Segoe UI, Roboto, Arial;
+        color: var(--accent);
+        -webkit-font-smoothing: antialiased;
+      }
+      .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 18px;
+      }
+      .story-frame {
+        width: 100%;
+        max-width: 420px;
+        height: 88vh;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      /* Header */
+      .header {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+      }
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        flex: 0 0 44px;
+      }
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .meta .user {
+        font-weight: 600;
+      }
+      .meta .time {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .close {
+        margin-left: auto;
+        color: var(--muted);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* progress bars removed - using component's internal progress */
+
+      /* caption */
+      .caption {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 20px;
+        padding: 12px;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
+        z-index: 30;
+        border-radius: 10px;
+        color: var(--accent);
+      }
+      .controls {
+        position: absolute;
+        bottom: 86px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        z-index: 30;
+      }
+      .btn {
+        background: rgba(255, 255, 255, 0.06);
+        padding: 6px 9px;
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+      }
+
+      /* Full clickable areas transparent to use component nav too */
+      .tap-left,
+      .tap-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 45%;
+        z-index: 18;
+      }
+      .tap-left {
+        left: 0;
+      }
+      .tap-right {
+        right: 0;
+      }
+      /* make sure story element sits behind UI */
+      mini-story {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        z-index: 10;
+      }
+
+      @media (max-width: 480px) {
+        .story-frame {
+          height: 96vh;
+          border-radius: 10px;
+        }
+        .avatar {
+          width: 36px;
+          height: 36px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="center">
+      <div class="story-frame" id="frame">
+        <div class="bars" id="bars"></div>
+
+        <div class="header">
+          <div class="avatar">
+            <img src="https://picsum.photos/id/1005/200/200" alt="avatar" />
+          </div>
+          <div class="meta">
+            <div class="user" id="user">Omar Issa</div>
+            <div class="time" id="time">12h</div>
+          </div>
+          <div class="close" id="close">✕</div>
+        </div>
+
+        <!-- the SDK component (module registers custom element) -->
+        <script type="module">
+          import "/dist/esm/index.js";
+        </script>
+
+        <mini-story
+          id="ms"
+          config='{
+          "images":[
+            "https://picsum.photos/id/1015/1200/900",
+            "https://picsum.photos/id/1016/1200/900",
+            "https://picsum.photos/id/1018/1200/900"
+          ],
+          "interval":4000,
+          "autoplay":true
+        }'
+        ></mini-story>
+
+        <!-- Transparent tap areas (optionally handled by component too) -->
+        <div class="tap-left" data-side="left"></div>
+        <div class="tap-right" data-side="right"></div>
+
+        <div class="controls" aria-hidden="true">
+          <button class="btn" id="prevBtn">Prev</button>
+          <button class="btn" id="nextBtn">Next</button>
+        </div>
+
+        <div class="caption" id="caption">
+          قصة قصيرة توضح تجربة عرض الشرائح — هذه مجرد مثال لشرح الميزة.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const ms = document.getElementById("ms");
+        const bars = document.getElementById("bars");
+        const caption = document.getElementById("caption");
+        const closeBtn = document.getElementById("close");
+
+        // fetch images from config attribute
+        const cfg = JSON.parse(ms.getAttribute("config"));
+        const images = cfg.images || [];
+        const interval = Number(cfg.interval) || 3500;
+
+        // build progress bars (one per image)
+        images.forEach((_, i) => {
+          const b = document.createElement("div");
+          b.className = "bar";
+          b.innerHTML = "<i></i>";
+          bars.appendChild(b);
+        });
+
+        const barEls = Array.from(bars.querySelectorAll(".bar i"));
+        let current = 0;
+        let isPaused = false;
+        let holdTimeout = null;
+        let skipNextEvent = false;
+
+        function startBar(i) {
+          // Freeze current widths and remove transitions
+          barEls.forEach((el) => {
+            el.style.width = window.getComputedStyle(el).width;
+            el.style.transition = "none";
+          });
+
+          // Force reflow so the 'none' transition takes effect
+          void document.body.offsetHeight;
+
+          // Set base widths (no animation)
+          barEls.forEach((el, idx) => {
+            el.style.width = idx < i ? "100%" : "0%";
+          });
+
+          // Small delay then animate the current bar
+          requestAnimationFrame(() => {
+            barEls[i].style.transition = `width ${interval}ms linear`;
+            barEls[i].style.width = "100%";
+          });
+        }
+
+        function setCurrent(i, fromEvent = false) {
+          current = i;
+          // Stop pause state when navigating
+          if (isPaused) {
+            isPaused = false;
+            // resume component if it was paused
+            if (ms.resume) ms.resume();
+          }
+          // If this call was manual, skip the next component event
+          if (!fromEvent) skipNextEvent = true;
+          startBar(i);
+        }
+
+        // when component emits events, sync UI (but ignore if we triggered it)
+        ms.addEventListener("story-next", (e) => {
+          if (skipNextEvent) return (skipNextEvent = false);
+          const idx = e.detail.index;
+          setCurrent(idx, true);
+        });
+        ms.addEventListener("story-prev", (e) => {
+          if (skipNextEvent) return (skipNextEvent = false);
+          const idx = e.detail.index;
+          setCurrent(idx, true);
+        });
+        ms.addEventListener("story-complete", () => {
+          if (skipNextEvent) return (skipNextEvent = false);
+          setCurrent(0, true);
+        });
+
+        // initial bar
+        setCurrent(0);
+
+        // tap handlers (call setCurrent BEFORE calling component to avoid flicker)
+        document.querySelector(".tap-left").addEventListener("click", () => {
+          if (ms.pause) ms.pause();
+          setCurrent(Math.max(0, current - 1));
+          ms.prev();
+          // resume shortly after to let component set up its internal state
+          setTimeout(() => ms.resume && ms.resume(), 20);
+        });
+        document.querySelector(".tap-right").addEventListener("click", () => {
+          if (ms.pause) ms.pause();
+          setCurrent(Math.min(images.length - 1, current + 1));
+          ms.next();
+          setTimeout(() => ms.resume && ms.resume(), 20);
+        });
+
+        // buttons
+        document.getElementById("prevBtn").addEventListener("click", () => {
+          if (ms.pause) ms.pause();
+          setCurrent(Math.max(0, current - 1));
+          ms.prev();
+          setTimeout(() => ms.resume && ms.resume(), 20);
+        });
+        document.getElementById("nextBtn").addEventListener("click", () => {
+          if (ms.pause) ms.pause();
+          setCurrent(Math.min(images.length - 1, current + 1));
+          ms.next();
+          setTimeout(() => ms.resume && ms.resume(), 20);
+        });
+
+        // hold-to-pause (mouse & touch)
+        function pauseAll() {
+          if (isPaused) return;
+          isPaused = true;
+          // stop component autoplay via its API
+          if (ms.pause) ms.pause();
+          // pause CSS transitions
+          barEls.forEach((el) => {
+            const w = window.getComputedStyle(el).width;
+            el.style.transition = "none";
+            el.style.width = w;
+          });
+        }
+
+        function resumeAll() {
+          if (!isPaused) return;
+          isPaused = false;
+          // Ensure previous animations are stopped
+          barEls.forEach((el) => {
+            el.style.transition = "none";
+            void el.offsetHeight;
+          });
+          // restart component autoplay via its API
+          if (ms.resume) ms.resume();
+          // resume progress by animating remaining width
+          barEls.forEach((el, idx) => {
+            if (idx === current) {
+              const parentWidth =
+                el.parentElement.getBoundingClientRect().width;
+              const curW = el.getBoundingClientRect().width;
+              const perc = curW / parentWidth;
+              const remaining = (1 - perc) * interval;
+              requestAnimationFrame(() => {
+                el.style.transition = `width ${remaining}ms linear`;
+                el.style.width = "100%";
+              });
+            } else if (idx > current) {
+              el.style.transition = "none";
+              el.style.width = "0%";
+            } else {
+              el.style.transition = "none";
+              el.style.width = "100%";
+            }
+          });
+        }
+
+        // mousedown / touchstart on frame => pause
+        const frame = document.getElementById("frame");
+        frame.addEventListener("mousedown", () => pauseAll());
+        frame.addEventListener("mouseup", () => resumeAll());
+        frame.addEventListener("mouseleave", () => resumeAll());
+        frame.addEventListener("touchstart", () => pauseAll(), {
+          passive: true,
+        });
+        frame.addEventListener("touchend", () => resumeAll(), {
+          passive: true,
+        });
+
+        // keyboard navigation (left/right/escape)
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight") {
+            if (ms.pause) ms.pause();
+            setCurrent(Math.min(images.length - 1, current + 1));
+            ms.next();
+            setTimeout(() => ms.resume && ms.resume(), 20);
+          }
+          if (e.key === "ArrowLeft") {
+            if (ms.pause) ms.pause();
+            setCurrent(Math.max(0, current - 1));
+            ms.prev();
+            setTimeout(() => ms.resume && ms.resume(), 20);
+          }
+          if (e.key === "Escape") window.close && window.close();
+        });
+
+        // close button (just hides demo)
+        closeBtn.addEventListener("click", () => {
+          document.querySelector(".center").style.display = "none";
+        });
+
+        // optional: update caption per slide if you have metadata per image
+        // here we just keep same caption. You can add metadata array and update caption on story-next.
+      })();
+    </script>
+  </body>
+</html>
